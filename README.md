@@ -1,26 +1,29 @@
-# ID CARD MAKER SOLUTION — v3
+# ID CARD MAKER SOLUTION
 
-## New in v3
-- AI face-focused crop using MediaPipe Face Detector.
-- Crop composition targets the supplied school-ID reference style: face is prominent, centered horizontally, hair near the upper portion, shoulders retained.
-- If no face is detected or the AI model cannot load, the tool falls back to a center crop.
-- Cropped photos preserve the **exact original filename**.
-- Download All creates `Cropped-Photos.zip` containing one folder: `Cropped Photos/`.
-- Added account/trial/premium UI. Active premium accounts hide payment buttons/options.
+Responsive static website prototype for GitHub Pages.
 
-## Premium activation flow
-1. User creates/logs into an account.
-2. User gets a 1-day trial.
-3. User chooses Monthly Rs. 99, Yearly Rs. 999, or Lifetime Rs. 4,999.
-4. User pays and sends payment proof plus registered email to WhatsApp +977 9707943095.
-5. Admin activates the account in the production database.
-6. The account displays its active plan/expiry and payment options are hidden.
+## Included
+- Bulk JPG/JPEG crop to 300 × 378 px (1 × 1.26 inch at 300 DPI)
+- Clean center crop with a "smart" crop mode
+- Bulk output download
+- XLSX → Common Delimited CSV
+- Chromium File System Access save dialog where supported
+- Light/dark mode
+- English/नेपाली UI toggle
+- Monthly / Yearly / Lifetime pricing
+- WhatsApp premium contact
+- Responsive mobile/tablet/desktop layout
 
-## Production security
-This GitHub Pages version is a front-end prototype. LocalStorage cannot securely enforce paid access. For real protection, connect Google/email authentication, a database, server-side authorization, and an admin dashboard (Firebase/Supabase or another backend). The admin dashboard should set `plan`, `expiresAt`, and `active` for each user. The tools should then be authorized server-side.
+## Run on GitHub Pages
+1. Upload `index.html`, `style.css`, and `script.js` to a GitHub repository.
+2. Enable GitHub Pages from Settings → Pages.
+3. Open the published site.
 
-## AI dependency
-The browser loads MediaPipe Tasks Vision from jsDelivr and the BlazeFace short-range model from Google-hosted model storage. Internet access is required for AI face detection. Google documents the Face Detector Web API at https://developers.google.com/edge/mediapipe/solutions/vision/face_detector/web_js
+## Important prototype limitations
+This is a front-end/static version. Real account creation, email verification, 1-day trial enforcement, persistent premium access, admin activation, and automatic eSewa/Khalti/bank payment verification require a backend/database and payment integration.
 
-## GitHub Pages
-Upload the files in this folder to a GitHub repository and enable GitHub Pages.
+The crop tool currently uses a clean center/subject-ready crop, not a trained face-recognition model. A real face detector can be added later with a browser model or backend.
+
+The original Excel file cannot normally be automatically deleted from a user's computer because browser security prevents websites from deleting arbitrary user files. The app therefore warns the user when deletion was requested.
+
+`xlsx` is loaded from jsDelivr in `index.html`. For a completely offline/self-contained deployment, download and host the library locally.
