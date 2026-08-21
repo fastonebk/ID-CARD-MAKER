@@ -1,37 +1,26 @@
-# ID CARD MAKER SOLUTION — v4 Admin Panel
+# ID CARD MAKER SOLUTION — v3
 
-## What's new
-- Exact original photo filenames preserved.
-- All cropped photos download as `Cropped-Photos.zip` with one `Cropped Photos` folder.
-- AI face-focused crop using MediaPipe Face Detector, with fallback center crop.
-- Account/trial/premium UI.
-- Customer **Submit Activation Request** form.
-- New `admin.html` dashboard for reviewing requests and activating/deactivating/extending plans.
-- Plans: Monthly Rs. 99, Yearly Rs. 999, Lifetime Rs. 4,999.
+## New in v3
+- AI face-focused crop using MediaPipe Face Detector.
+- Crop composition targets the supplied school-ID reference style: face is prominent, centered horizontally, hair near the upper portion, shoulders retained.
+- If no face is detected or the AI model cannot load, the tool falls back to a center crop.
+- Cropped photos preserve the **exact original filename**.
+- Download All creates `Cropped-Photos.zip` containing one folder: `Cropped Photos/`.
+- Added account/trial/premium UI. Active premium accounts hide payment buttons/options.
 
-## Demo admin panel
-Open `admin.html`.
-Demo credentials:
-- Email: `admin@idcardmakersolution.com`
-- Password: `admin1234`
+## Premium activation flow
+1. User creates/logs into an account.
+2. User gets a 1-day trial.
+3. User chooses Monthly Rs. 99, Yearly Rs. 999, or Lifetime Rs. 4,999.
+4. User pays and sends payment proof plus registered email to WhatsApp +977 9707943095.
+5. Admin activates the account in the production database.
+6. The account displays its active plan/expiry and payment options are hidden.
 
-The demo panel uses browser `localStorage` so it can be tested immediately. It is **NOT secure enough for a real paid service**.
+## Production security
+This GitHub Pages version is a front-end prototype. LocalStorage cannot securely enforce paid access. For real protection, connect Google/email authentication, a database, server-side authorization, and an admin dashboard (Firebase/Supabase or another backend). The admin dashboard should set `plan`, `expiresAt`, and `active` for each user. The tools should then be authorized server-side.
 
-## Real production activation (recommended)
-For customers using different phones/computers, connect the site to a backend:
-1. Firebase Authentication (Google + Email/Password) or Supabase Auth.
-2. Firestore/Supabase database for `users`, `subscriptions`, and `paymentRequests`.
-3. Admin-only security rules.
-4. Store plan, activation date, expiry date, status, payment reference, and admin ID.
-5. Customer site reads premium status from the database; when active, hide payment UI and allow the tools.
-6. Admin activates a customer with one click.
-
-Do not use the demo admin password or localStorage as the production payment lock.
+## AI dependency
+The browser loads MediaPipe Tasks Vision from jsDelivr and the BlazeFace short-range model from Google-hosted model storage. Internet access is required for AI face detection. Google documents the Face Detector Web API at https://developers.google.com/edge/mediapipe/solutions/vision/face_detector/web_js
 
 ## GitHub Pages
-Upload all files to the repository root and enable GitHub Pages. `admin.html` is available at `/admin.html`.
-
-## External libraries
-- SheetJS XLSX via jsDelivr
-- JSZip via jsDelivr
-- MediaPipe Tasks Vision via jsDelivr + Google model hosting
+Upload the files in this folder to a GitHub repository and enable GitHub Pages.
