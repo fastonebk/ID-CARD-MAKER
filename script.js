@@ -1,77 +1,38 @@
-const $=s=>document.querySelector(s);
-const toast=(m)=>{const t=$("#toast");t.textContent=m;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),2800)};
+const $=s=>document.querySelector(s);const toast=m=>{const t=$("#toast");t.textContent=m;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),2800)};
+$("#themeBtn").onclick=()=>{document.body.classList.toggle("dark");localStorage.setItem("idcms-theme",document.body.classList.contains("dark")?"dark":"light")};if(localStorage.getItem("idcms-theme")==="dark")document.body.classList.add("dark");
+let nep=false;$("#langBtn").onclick=()=>{nep=!nep;$("#langBtn").textContent=nep?"English":"नेपाली";$("#heroText").textContent=nep?"स्कुल, स्टुडियो र ID कार्ड व्यवसायका लागि AI-assisted फोटो crop र Excel लाई Common Delimited CSV मा परिवर्तन गर्ने सजिलो टुल।":"AI-assisted face-focused photo cropping and Excel to Common Delimited CSV conversion for schools, studios and ID card professionals."};
 
-$("#themeBtn").onclick=()=>{document.body.classList.toggle("dark");localStorage.setItem("idcms-theme",document.body.classList.contains("dark")?"dark":"light")};
-if(localStorage.getItem("idcms-theme")==="dark")document.body.classList.add("dark");
+// ---------- Account / trial / premium display ----------
+const KEY="idcms-account";const getAccount=()=>{try{return JSON.parse(localStorage.getItem(KEY)||"null")}catch{return null}};const setAccount=a=>localStorage.setItem(KEY,JSON.stringify(a));const daysLeft=s=>Math.ceil(Math.max(0,86400000-(Date.now()-s))/86400000);
+function updateAccount(){const a=getAccount();if(!a){$("#accountName").textContent="Guest User";$("#accountEmail").textContent="Not signed in";$("#planBadge").textContent="FREE / NOT SIGNED IN";$("#trialInfo").textContent="Create an account to start your 1-day trial.";$("#logoutBtn").hidden=true;$("#authBtn").textContent="Login / Create Account";$("#activePremiumBox").hidden=true;document.querySelectorAll(".premiumBtn,.payment-box").forEach(x=>x.hidden=false);return}$("#accountName").textContent=a.name||"User";$("#accountEmail").textContent=a.email;$("#accountAvatar").textContent=(a.name||"U").slice(0,2).toUpperCase();$("#logoutBtn").hidden=false;$("#authBtn").textContent=`Hi, ${(a.name||"User").split(" ")[0]}`;if(a.plan&&a.plan!=="trial"){$("#planBadge").textContent=`PREMIUM · ${a.plan.toUpperCase()}`;$("#trialInfo").textContent=`Premium active until ${a.expiresAt==="lifetime"?"Lifetime":new Date(a.expiresAt).toLocaleDateString()}.`;$("#activePremiumBox").hidden=false;document.querySelectorAll(".premiumBtn,.payment-box").forEach(x=>x.hidden=true)}else{const n=daysLeft(a.trialStart);$("#planBadge").textContent=n>0?"1-DAY TRIAL":"TRIAL EXPIRED";$("#trialInfo").textContent=n>0?`Trial active · approximately ${n} day remaining.`:"Your trial has ended. Choose Premium to continue.";$("#activePremiumBox").hidden=true;document.querySelectorAll(".premiumBtn,.payment-box").forEach(x=>x.hidden=false)}}updateAccount();
+$("#authBtn").onclick=()=>{if(getAccount())$("#account").scrollIntoView({behavior:"smooth"});else $("#authModal").hidden=false};$("#emailBtn").onclick=()=>$("#authModal").hidden=false;$("#closeAuth").onclick=()=>$("#authModal").hidden=true;
+$("#saveAccount").onclick=()=>{const name=$("#authName").value.trim(),email=$("#authEmail").value.trim(),pw=$("#authPassword").value;if(!name||!email||!pw){toast("Please fill name, email and password.");return}const old=getAccount();const a=old&&old.email===email?old:{name,email,trialStart:Date.now(),plan:"trial"};a.name=name;a.email=email;setAccount(a);$("#authModal").hidden=true;updateAccount();toast("Account ready. Your 1-day trial has started.")};
+$("#logoutBtn").onclick=()=>{localStorage.removeItem(KEY);updateAccount();toast("Logged out.")};$("#googleBtn").onclick=()=>toast("Google sign-in needs a real authentication backend on the production site.");$("#premiumAccessBtn").onclick=()=>$("#pricing").scrollIntoView({behavior:"smooth"});
+function allowed(){const a=getAccount();if(!a){toast("Please login or create an account first.");$("#authModal").hidden=false;return false}if(a.plan==="trial"&&daysLeft(a.trialStart)<=0){toast("Your 1-day trial has expired. Please get Premium.");$("#pricing").scrollIntoView({behavior:"smooth"});return false}return true}
 
-let nep=false;
-$("#langBtn").onclick=()=>{nep=!nep;$("#langBtn").textContent=nep?"English":"नेपाली";$("#heroText").textContent=nep?"स्कुल, स्टुडियो र ID कार्ड व्यवसायका लागि छिटो र सजिलो टुल। Bulk फोटो crop र Excel लाई Common Delimited CSV मा परिवर्तन गर्नुहोस्।":"Fast, simple tools for studios, schools and ID card professionals. Crop bulk photos and convert Excel files to Common Delimited CSV."};
-
-let photoFiles=[], croppedBlobs=[];
-const photoInput=$("#photoInput"), cropBtn=$("#cropBtn");
-photoInput.onchange=()=>{photoFiles=[...photoInput.files]; cropBtn.disabled=!photoFiles.length; $("#photoStatus").textContent=photoFiles.length?`${photoFiles.length} photo(s) selected.`:""};
-["photoDrop"].forEach(id=>{const z=$("#"+id);z.ondragover=e=>{e.preventDefault();z.style.borderColor="#0b8f65"};z.ondragleave=()=>z.style.borderColor="";z.ondrop=e=>{e.preventDefault();photoFiles=[...e.dataTransfer.files].filter(f=>/image\/jpe?g/i.test(f.type));cropBtn.disabled=!photoFiles.length;$("#photoStatus").textContent=`${photoFiles.length} photo(s) selected.`}});
+// ---------- AI face-focused crop ----------
+let photoFiles=[],croppedBlobs=[],faceDetectorPromise=null;
+$("#photoInput").onchange=()=>{photoFiles=[...$("#photoInput").files];$("#cropBtn").disabled=!photoFiles.length;$("#photoStatus").textContent=photoFiles.length?`${photoFiles.length} photo(s) selected.`:""};
+$("#photoDrop").ondragover=e=>{e.preventDefault();$("#photoDrop").style.borderColor="#0b8f65"};$("#photoDrop").ondrop=e=>{e.preventDefault();photoFiles=[...e.dataTransfer.files].filter(f=>/image\/jpe?g/i.test(f.type));$("#cropBtn").disabled=!photoFiles.length;$("#photoStatus").textContent=`${photoFiles.length} photo(s) selected.`};
 function loadImage(file){return new Promise((res,rej)=>{const im=new Image();im.onload=()=>res(im);im.onerror=rej;im.src=URL.createObjectURL(file)})}
-function smartCrop(img,targetW,targetH){
-  const sw=img.naturalWidth, sh=img.naturalHeight, target=targetW/targetH;
-  let sx=0,sy=0,cw=sw,ch=sh;
-  if(sw/sh>target){cw=Math.round(sh*target);sx=Math.round((sw-cw)/2)}
-  else{ch=Math.round(sw/target);sy=Math.round((sh-ch)*.42)}
-  const c=document.createElement("canvas");c.width=targetW;c.height=targetH;
-  c.getContext("2d").drawImage(img,sx,sy,cw,ch,0,0,targetW,targetH);return c;
+async function getFaceDetector(){if(!faceDetectorPromise){faceDetectorPromise=(async()=>{try{const vision=await import("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@1.0.1/vision_bundle.mjs");const fileset=await vision.FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@1.0.1/wasm");return await vision.FaceDetector.createFromOptions(fileset,{baseOptions:{modelAssetPath:"https://storage.googleapis.com/mediapipe-models/face_detector/blaze_face_short_range/float16/1/blaze_face_short_range.tflite"},runningMode:"IMAGE",minDetectionConfidence:.45,minSuppressionThreshold:.3})}catch(e){console.warn("Face detector unavailable",e);return null}})()}return faceDetectorPromise}
+function boxPixels(b,sw,sh){let x=b.originX,y=b.originY,w=b.width,h=b.height;if(Math.max(Math.abs(x),Math.abs(y),Math.abs(w),Math.abs(h))<=1.01){x*=sw;y*=sh;w*=sw;h*=sh}return{x,y,w,h}}
+async function detectFace(img){const d=await getFaceDetector();if(!d)return null;try{const r=d.detect(img),faces=r?.detections||[];let best=null,area=0;for(const f of faces){if(!f.boundingBox)continue;const b=boxPixels(f.boundingBox,img.naturalWidth,img.naturalHeight),a=b.w*b.h;if(a>area){area=a;best=b}}return best}catch(e){return null}}
+function centerCrop(img,W,H){const sw=img.naturalWidth,sh=img.naturalHeight,target=W/H;let cw=sw,ch=sh,sx=0,sy=0;if(sw/sh>target){cw=sh*target;sx=(sw-cw)/2}else{ch=sw/target;sy=(sh-ch)*.42}const c=document.createElement("canvas");c.width=W;c.height=H;c.getContext("2d").drawImage(img,sx,sy,cw,ch,0,0,W,H);return c}
+function faceCrop(img,face,W,H){if(!face)return centerCrop(img,W,H);const sw=img.naturalWidth,sh=img.naturalHeight,target=W/H;const faceHeightRatio=.38,topMargin=.11;let ch=face.h/faceHeightRatio,cw=ch*target;if(cw>sw){cw=sw;ch=cw/target}if(ch>sh){ch=sh;cw=ch*target}let sx=face.x+face.w/2-cw/2,sy=face.y-topMargin*ch;sx=Math.max(0,Math.min(sx,sw-cw));sy=Math.max(0,Math.min(sy,sh-ch));const c=document.createElement("canvas");c.width=W;c.height=H;c.getContext("2d").drawImage(img,sx,sy,cw,ch,0,0,W,H);return c}
+$("#cropBtn").onclick=async()=>{if(!allowed())return;croppedBlobs=[];$("#photoResults").innerHTML="";const W=300,H=378;const mode=$("#cropMode").value;for(let i=0;i<photoFiles.length;i++){const f=photoFiles[i];try{$("#photoStatus").textContent=`Loading AI crop… ${i+1}/${photoFiles.length}`;const im=await loadImage(f);const face=mode==="smart"?await detectFace(im):null;const c=faceCrop(im,face,W,H);const blob=await new Promise(r=>c.toBlob(r,"image/jpeg",.94));croppedBlobs.push({blob,name:f.name});const u=URL.createObjectURL(blob),p=document.createElement("img");p.src=u;p.title=f.name;$("#photoResults").appendChild(p);$("#photoStatus").textContent=`Processed ${i+1} of ${photoFiles.length} · ${face?"AI face focused":"center fallback"}`}catch(e){console.error(e);$("#photoStatus").textContent=`Could not process ${f.name}`}}$("#downloadPhotos").hidden=!croppedBlobs.length;toast(`Finished ${croppedBlobs.length} photo(s). Original filenames preserved.`)};
+$("#downloadPhotos").onclick=async()=>{if(!allowed()||!croppedBlobs.length)return;const zip=new JSZip(),folder=zip.folder("Cropped Photos");croppedBlobs.forEach(x=>folder.file(x.name,x.blob));const blob=await zip.generateAsync({type:"blob",compression:"DEFLATE",compressionOptions:{level:6}});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="Cropped-Photos.zip";a.click();toast("ZIP created: Cropped Photos folder + original filenames.")};
+
+// ---------- Excel to CSV ----------
+let excelFile=null;$("#excelInput").onchange=()=>{excelFile=$("#excelInput").files[0];$("#convertBtn").disabled=!excelFile;$("#excelStatus").textContent=excelFile?excelFile.name:""};$("#excelDrop").ondragover=e=>{e.preventDefault();$("#excelDrop").style.borderColor="#0b8f65"};$("#excelDrop").ondrop=e=>{e.preventDefault();const f=[...e.dataTransfer.files].find(x=>/\.xlsx?$/i.test(x.name));if(f){excelFile=f;$("#convertBtn").disabled=false;$("#excelStatus").textContent=f.name}};
+$("#convertBtn").onclick=async()=>{if(!allowed()||!excelFile)return;try{const wb=XLSX.read(await excelFile.arrayBuffer(),{type:"array"}),csv=XLSX.utils.sheet_to_csv(wb.Sheets[wb.SheetNames[0]],{FS:",",RS:"\n"}),blob=new Blob([csv],{type:"text/csv;charset=utf-8"});$("#csvDownload").href=URL.createObjectURL(blob);$("#csvDownload").download=excelFile.name.replace(/\.xlsx?$/i,"")+".csv";$("#csvDownload").hidden=false;$("#folderBtn").hidden=false;$("#folderBtn").onclick=async()=>{if(window.showSaveFilePicker){try{const h=await window.showSaveFilePicker({suggestedName:excelFile.name.replace(/\.xlsx?$/i,"")+".csv",types:[{description:"CSV",accept:{"text/csv":[".csv"]}}]}),w=await h.createWritable();await w.write(blob);await w.close();$("#excelStatus").textContent=$("#deleteExcel").checked?"CSV saved. Browser security prevents deleting the original selected file.":"CSV saved.";toast("CSV saved successfully.")}catch(e){if(e.name!=="AbortError")toast("Save cancelled or unavailable.")}}else $("#csvDownload").click()};$("#excelStatus").textContent="Conversion successful.";toast("Excel converted to CSV.")}catch(e){console.error(e);toast("Conversion failed.")}};
+
+document.querySelectorAll(".premiumBtn").forEach(b=>b.onclick=()=>window.open("https://wa.me/9779707943095?text=Hello%20ID%20CARD%20MAKER%20SOLUTION%2C%20I%20want%20Premium%20access.%20My%20registered%20email%20is%3A%20","_blank"));
+
+// ---------- Manual premium activation request (demo) ----------
+const premiumModal=$("#premiumModal");
+if($("#requestPremiumBtn")){
+  $("#requestPremiumBtn").onclick=()=>{if(!getAccount()){toast("Please create/login to your account first.");$("#authModal").hidden=false;return}premiumModal.hidden=false};
+  $("#closePremium").onclick=()=>premiumModal.hidden=true;
+  $("#submitRequest").onclick=()=>{const a=getAccount();if(!a){toast("Please login first.");return}const reqs=JSON.parse(localStorage.getItem("idcms-payment-requests")||"[]");reqs.push({name:a.name,email:a.email,plan:$("#requestPlan").value,method:$("#requestMethod").value,txn:$("#requestTxn").value.trim(),note:$("#requestNote").value.trim(),status:"pending",createdAt:new Date().toISOString()});localStorage.setItem("idcms-payment-requests",JSON.stringify(reqs));premiumModal.hidden=true;toast("Activation request submitted. Send payment proof on WhatsApp.")};
 }
-cropBtn.onclick=async()=>{
-  croppedBlobs=[];$("#photoResults").innerHTML="";
-  const W=300,H=378; // 1 x 1.26 inch at 300 DPI
-  for(let i=0;i<photoFiles.length;i++){
-    try{
-      const im=await loadImage(photoFiles[i]),c=smartCrop(im,W,H);
-      const blob=await new Promise(r=>c.toBlob(r,$("#photoFormat").value,.94));
-      croppedBlobs.push({blob,name:photoFiles[i].name.replace(/\.[^.]+$/,"")+"_cropped.jpg"});
-      const u=URL.createObjectURL(blob),img=document.createElement("img");img.src=u;img.title=photoFiles[i].name;$("#photoResults").appendChild(img);
-    }catch(e){console.error(e)}
-    $("#photoStatus").textContent=`Processed ${i+1} of ${photoFiles.length} photo(s).`;
-  }
-  $("#downloadPhotos").hidden=!croppedBlobs.length;
-  toast(`Finished ${croppedBlobs.length} photo(s).`);
-};
-$("#downloadPhotos").onclick=()=>{
-  if(!croppedBlobs.length)return;
-  if(croppedBlobs.length===1){const a=document.createElement("a");a.href=URL.createObjectURL(croppedBlobs[0].blob);a.download=croppedBlobs[0].name;a.click();return}
-  // Browser-safe bulk save: download each output. For a true folder/ZIP workflow, a backend or File System Access API can be added.
-  croppedBlobs.forEach((x,i)=>setTimeout(()=>{const a=document.createElement("a");a.href=URL.createObjectURL(x.blob);a.download=x.name;a.click()},i*180));
-  toast("Starting bulk downloads...");
-};
-
-let excelFile=null,csvText="";
-$("#excelInput").onchange=()=>{excelFile=$("#excelInput").files[0];$("#convertBtn").disabled=!excelFile;$("#excelStatus").textContent=excelFile?excelFile.name:""};
-$("#excelDrop").ondragover=e=>{e.preventDefault();$("#excelDrop").style.borderColor="#0b8f65"};
-$("#excelDrop").ondrop=e=>{e.preventDefault();const f=[...e.dataTransfer.files].find(x=>/\.xlsx?$/i.test(x.name));if(f){excelFile=f;$("#convertBtn").disabled=false;$("#excelStatus").textContent=f.name}};
-$("#convertBtn").onclick=async()=>{
-  if(!excelFile)return;
-  try{
-    const data=await excelFile.arrayBuffer();
-    const wb=XLSX.read(data,{type:"array"});
-    const sheet=wb.Sheets[wb.SheetNames[0]];
-    csvText=XLSX.utils.sheet_to_csv(sheet,{FS:",",RS:"\n"});
-    const blob=new Blob([csvText],{type:"text/csv;charset=utf-8"});
-    const url=URL.createObjectURL(blob);
-    $("#csvDownload").href=url;$("#csvDownload").download=excelFile.name.replace(/\.xlsx?$/i,"")+".csv";$("#csvDownload").hidden=false;
-    $("#excelStatus").textContent="Conversion successful.";
-    $("#folderBtn").hidden=false;
-    $("#folderBtn").onclick=async()=>{
-      if(window.showSaveFilePicker){
-        try{
-          const h=await window.showSaveFilePicker({suggestedName:excelFile.name.replace(/\.xlsx?$/i,"")+".csv",types:[{description:"CSV",accept:{"text/csv":[".csv"]}}]});
-          const w=await h.createWritable();await w.write(blob);await w.close();
-          toast("CSV saved successfully.");
-          // Browsers generally cannot delete an arbitrary input file selected from the user's disk.
-          if($("#deleteExcel").checked) $("#excelStatus").textContent="CSV saved. Original Excel cannot be automatically deleted by this browser for security reasons.";
-        }catch(e){if(e.name!=="AbortError")toast("Save cancelled or unavailable.");}
-      }else{$("#csvDownload").click();toast("CSV downloaded. Folder selection is not supported in this browser.");}
-    };
-    toast("Excel converted to CSV.");
-  }catch(e){$("#excelStatus").textContent="Could not read this Excel file.";toast("Conversion failed.");console.error(e)}
-};
-
-document.querySelectorAll(".premiumBtn").forEach(b=>b.onclick=()=>window.open("https://wa.me/9779707943095?text=Hello%20ID%20CARD%20MAKER%20SOLUTION%2C%20I%20want%20Premium%20access.","_blank"));

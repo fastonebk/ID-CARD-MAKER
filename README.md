@@ -1,29 +1,47 @@
-# ID CARD MAKER SOLUTION
+# ID CARD MAKER SOLUTION — v5 GitHub-ready package
 
-Responsive static website prototype for GitHub Pages.
+## Admin Portal
+The admin portal is a separate page included in the repository:
 
-## Included
-- Bulk JPG/JPEG crop to 300 × 378 px (1 × 1.26 inch at 300 DPI)
-- Clean center crop with a "smart" crop mode
-- Bulk output download
-- XLSX → Common Delimited CSV
-- Chromium File System Access save dialog where supported
-- Light/dark mode
-- English/नेपाली UI toggle
-- Monthly / Yearly / Lifetime pricing
-- WhatsApp premium contact
-- Responsive mobile/tablet/desktop layout
+`https://fastonebk.github.io/ID-CARD-MAKER/admin.html`
 
-## Run on GitHub Pages
-1. Upload `index.html`, `style.css`, and `script.js` to a GitHub repository.
-2. Enable GitHub Pages from Settings → Pages.
-3. Open the published site.
+After publishing all files, open the exact URL above. The customer site also has an **Admin Portal** link in the top navigation and footer.
 
-## Important prototype limitations
-This is a front-end/static version. Real account creation, email verification, 1-day trial enforcement, persistent premium access, admin activation, and automatic eSewa/Khalti/bank payment verification require a backend/database and payment integration.
+### Demo admin login
+- Email: `admin@idcardmakersolution.com`
+- Password: `admin1234`
 
-The crop tool currently uses a clean center/subject-ready crop, not a trained face-recognition model. A real face detector can be added later with a browser model or backend.
+## Admin features
+- Dashboard counts for customers, pending requests, active premium and expired accounts.
+- Pending request Activate / Reject buttons.
+- Quick Activate Customer: enter the customer's registered email and choose Monthly / Yearly / Lifetime.
+- Activate / Extend customer.
+- Deactivate premium.
+- Customer site hides premium payment controls while the account is active.
 
-The original Excel file cannot normally be automatically deleted from a user's computer because browser security prevents websites from deleting arbitrary user files. The app therefore warns the user when deletion was requested.
+## Very important limitation
+This GitHub Pages package is a **demo/prototype**. `localStorage` is browser-specific. Therefore, if a customer pays from their phone and you open the Admin Portal on your computer, the browser data will NOT automatically appear on your computer.
 
-`xlsx` is loaded from jsDelivr in `index.html`. For a completely offline/self-contained deployment, download and host the library locally.
+For a real paid launch, the next step is to connect Firebase Authentication + Firestore (or Supabase Auth + database). Then customer accounts, payment requests, subscription status and admin activation will be shared securely across devices.
+
+Do not use the demo admin password for a real paid service.
+
+## Publish on GitHub Pages
+Upload **all files** from this folder to the repository root:
+- `index.html`
+- `admin.html`
+- `style.css`
+- `admin.css`
+- `script.js`
+- `admin.js`
+- `README.md`
+
+Then enable GitHub Pages.
+
+## Existing functionality
+- AI face-focused 1 × 1.26 inch crop at 300 DPI (300 × 378 px).
+- Exact original filenames preserved.
+- All cropped photos downloaded in one `Cropped-Photos.zip` containing a `Cropped Photos` folder.
+- Excel `.xlsx` to Common Delimited CSV.
+- Light/dark mode and English/नेपाली toggle.
+- 1-day trial UI and Monthly / Yearly / Lifetime plans.
