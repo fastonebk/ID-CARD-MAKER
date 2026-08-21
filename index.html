@@ -1,93 +1,29 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="ID CARD MAKER SOLUTION - Bulk Photo Crop and Excel to CSV">
-  <title>ID CARD MAKER SOLUTION</title>
-  <link rel="stylesheet" href="style.css">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="ID CARD MAKER SOLUTION - AI face-focused bulk photo crop and Excel to CSV">
+<title>ID CARD MAKER SOLUTION</title><link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <header class="topbar">
-    <div class="brand"><span class="brand-mark">ID</span><span>ID CARD MAKER <b>SOLUTION</b></span></div>
-    <nav>
-      <a href="#tools">Tools</a><a href="#pricing">Pricing</a><a href="#contact">Contact</a>
-      <button id="langBtn" class="ghost">नेपाली</button><button id="themeBtn" class="icon-btn">☾</button><button id="authBtn" class="account-btn">Login / Create Account</button>
-      <button id="themeBtn" class="icon-btn" aria-label="Toggle dark mode">☾</button>
-    </nav>
-  </header>
+<header class="topbar"><div class="brand"><span class="brand-mark">ID</span><span>ID CARD MAKER <b>SOLUTION</b></span></div><nav><a href="#tools">Tools</a><a href="#account">Account</a><a href="#pricing">Pricing</a><a href="#contact">Contact</a><button id="langBtn" class="ghost">नेपाली</button><button id="themeBtn" class="icon-btn">☾</button><button id="authBtn" class="account-btn">Login / Create Account</button></nav></header>
+<main>
+<section class="hero"><div><span class="pill">SMART ID CARD WORKFLOW</span><h1>ID CARD MAKER <span>SOLUTION</span></h1><p id="heroText">AI-assisted face-focused photo cropping and Excel to Common Delimited CSV conversion for schools, studios and ID card professionals.</p><div class="hero-actions"><a class="primary" href="#tools">Start Using Tools</a><a class="secondary" href="#pricing">Get Premium</a></div><div class="trust"><span>✓ 1-Day Trial</span><span>✓ English / नेपाली</span><span>✓ Mobile Friendly</span><span>✓ AI Face Focus</span></div></div><div class="hero-card"><div class="mini-window"><div class="dots">● ● ●</div><div class="mini-title">ID CARD MAKER SOLUTION</div><div class="mini-tools"><div>📷<b>AI Bulk Photo Crop</b><small>1 × 1.26 in · 300 DPI</small></div><div>📊<b>Excel → CSV</b><small>Common Delimited</small></div></div></div></div></section>
 
-  <main>
-    <section class="hero">
-      <div>
-        <span class="pill">SMART ID CARD WORKFLOW</span>
-        <h1>ID CARD MAKER <span>SOLUTION</span></h1>
-        <p id="heroText">Fast, simple tools for studios, schools and ID card professionals. Crop bulk photos and convert Excel files to Common Delimited CSV.</p>
-        <div class="hero-actions"><a class="primary" href="#tools">Start Using Tools</a><a class="secondary" href="#pricing">Get Premium</a></div>
-        <div class="trust"><span>✓ 1-Day Trial</span><span>✓ English / नेपाली</span><span>✓ Mobile Friendly</span></div>
-      </div>
-      <div class="hero-card">
-        <div class="mini-window"><div class="dots">● ● ●</div><div class="mini-title">ID CARD MAKER SOLUTION</div>
-        <div class="mini-tools"><div>📷<b>Bulk Photo Crop</b><small>1 × 1.26 in · 300 DPI</small></div><div>📊<b>Excel → CSV</b><small>Common Delimited</small></div></div></div>
-      </div>
-    </section>
+<section id="tools" class="section"><div class="section-heading"><span class="eyebrow">TOOLS</span><h2>Everything you need in one place</h2><p>Images are processed in your browser. AI face detection focuses the crop around the largest detected face.</p></div><div class="tool-grid">
+<article class="tool-card"><div class="tool-icon">📷</div><h3>Bulk Photo Crop</h3><p>Creates a professional school-ID portrait composition: face prominent, horizontally centered, head near the top and shoulders retained.</p><label class="dropzone" id="photoDrop"><input id="photoInput" type="file" accept="image/jpeg,image/jpg" multiple><span class="drop-icon">＋</span><b>Choose JPG Photos</b><small>or drag & drop multiple photos here</small></label><div class="tool-options"><label>Crop mode<select id="cropMode"><option value="smart">AI Face-Focused Crop (recommended)</option><option value="center">Center Crop</option></select></label><label>Output<select id="photoFormat"><option value="image/jpeg">JPG — keep original filename</option></select></label></div><button id="cropBtn" class="primary full" disabled>Crop Photos</button><div id="photoStatus" class="status"></div><button id="downloadPhotos" class="primary full" hidden>Download All as ZIP</button><div id="photoResults" class="results"></div></article>
+<article class="tool-card"><div class="tool-icon">📊</div><h3>Excel to CSV</h3><p>Convert <b>.xlsx</b> files into Common Delimited CSV and choose a save location where your browser supports it.</p><label class="dropzone" id="excelDrop"><input id="excelInput" type="file" accept=".xlsx,.xls"><span class="drop-icon">＋</span><b>Choose Excel File</b><small>or drag & drop your .xlsx file here</small></label><label class="checkbox"><input id="deleteExcel" type="checkbox"> Remove original Excel after successful save <span title="Browser security restriction">ⓘ</span></label><button id="convertBtn" class="primary full" disabled>Convert to CSV</button><div id="excelStatus" class="status"></div><button id="folderBtn" class="secondary full" hidden>Choose Save Location & Save CSV</button><a id="csvDownload" class="secondary full download-link" hidden>Download CSV</a></article>
+</div></section>
 
-    <section id="tools" class="section">
-      <div class="section-heading"><span class="eyebrow">TOOLS</span><h2>Everything you need in one place</h2><p>Files are processed locally in your browser for the prototype.</p></div>
-      <div class="tool-grid">
-        <article class="tool-card">
-          <div class="tool-icon">📷</div><h3>Bulk Photo Crop</h3>
-          <p>Crop JPG/JPEG photos to <b>1 × 1.26 inch at 300 DPI</b>, keeping the subject centered with a clean crop.</p>
-          <label class="dropzone" id="photoDrop"><input id="photoInput" type="file" accept="image/jpeg,image/jpg" multiple><span class="drop-icon">＋</span><b>Choose JPG Photos</b><small>or drag & drop multiple photos here</small></label>
-          <div class="tool-options">
-            <label>Crop mode<select id="cropMode"><option value="smart">Smart center / face-ready crop</option><option value="center">Center crop</option></select></label>
-            <label>Output<select id="photoFormat"><option value="image/jpeg">JPG</option><option value="image/png">PNG</option></select></label>
-          </div>
-          <button id="cropBtn" class="primary full" disabled>Crop Photos</button>
-          <div id="photoStatus" class="status"></div>
-          <button id="downloadPhotos" class="primary full" hidden>Download All as ZIP</button>
-          <div id="photoResults" class="results"></div>
-        </article>
+<section id="account" class="section account-section"><div class="section-heading"><span class="eyebrow">ACCOUNT & ACCESS</span><h2>Your access</h2><p>Every new account gets a 1-day trial. Premium access is activated by the admin after payment confirmation.</p></div><div class="account-panel"><div class="account-info"><div class="account-avatar" id="accountAvatar">ID</div><div><h3 id="accountName">Guest User</h3><p id="accountEmail">Not signed in</p><span id="planBadge" class="plan-badge">FREE / NOT SIGNED IN</span></div></div><div class="account-actions"><button id="googleBtn" class="google-btn">G&nbsp;&nbsp; Continue with Google</button><button id="emailBtn" class="secondary">Create Account / Login</button><button id="premiumAccessBtn" class="primary">Get Premium Access</button><button id="logoutBtn" class="ghost" hidden>Logout</button></div><div id="trialInfo" class="trial-info">Create an account to start your 1-day trial.</div><div id="activePremiumBox" class="active-premium" hidden>✓ Premium is active. Payment options are hidden for this account while the plan is active.</div></div></section>
 
-        <article class="tool-card">
-          <div class="tool-icon">📊</div><h3>Excel to CSV</h3>
-          <p>Convert <b>.xlsx</b> files into Common Delimited CSV. Choose a destination folder when supported.</p>
-          <label class="dropzone" id="excelDrop"><input id="excelInput" type="file" accept=".xlsx,.xls"><span class="drop-icon">＋</span><b>Choose Excel File</b><small>or drag & drop your .xlsx file here</small></label>
-          <label class="checkbox"><input id="deleteExcel" type="checkbox"> Remove original Excel after a successful save <span title="Browser security rules may prevent automatic deletion">ⓘ</span></label>
-          <button id="convertBtn" class="primary full" disabled>Convert to CSV</button>
-          <div id="excelStatus" class="status"></div>
-          <button id="folderBtn" class="secondary full" hidden>Choose Save Folder & Save CSV</button>
-          <a id="csvDownload" class="secondary full download-link" hidden>Download CSV</a>
-        </article>
-      </div>
-    </section>
+<section class="how section"><div class="section-heading"><span class="eyebrow">HOW IT WORKS</span><h2>Simple workflow</h2></div><div class="steps"><div><b>01</b><h3>Upload</h3><p>Select your photos or Excel file.</p></div><div><b>02</b><h3>Process</h3><p>AI focuses the crop around the face, or use center crop.</p></div><div><b>03</b><h3>Save</h3><p>Download all cropped images together as one ZIP.</p></div></div></section>
 
-    <section class="how section">
-      <div class="section-heading"><span class="eyebrow">HOW IT WORKS</span><h2>Simple workflow</h2></div>
-      <div class="steps"><div><b>01</b><h3>Upload</h3><p>Select your photos or Excel file.</p></div><div><b>02</b><h3>Process</h3><p>Use the tool directly in your browser.</p></div><div><b>03</b><h3>Save</h3><p>Download your finished files in bulk.</p></div></div>
-    </section>
+<section id="pricing" class="section pricing"><div class="section-heading"><span class="eyebrow">PREMIUM</span><h2>Choose your plan</h2><p id="pricingText">Pay once, send confirmation, and the admin activates your account. After activation, the payment options disappear from your account.</p></div><div class="price-grid"><article class="price-card"><h3>Monthly</h3><div class="price">Rs. 99 <small>/ month</small></div><p>Full website access</p><button class="secondary premiumBtn">Get Premium</button></article><article class="price-card featured"><span class="popular">BEST VALUE</span><h3>Yearly</h3><div class="price">Rs. 999 <small>/ year</small></div><p>Full website access</p><button class="primary premiumBtn">Get Premium</button></article><article class="price-card"><h3>Lifetime</h3><div class="price">Rs. 4,999</div><p>One-time access</p><button class="secondary premiumBtn">Get Premium</button></article></div><div class="payment-box"><b>Payment / Activation</b><span>eSewa: 9707943095</span><span>Khalti / Bank: Contact admin</span><a href="https://wa.me/9779707943095" target="_blank" rel="noopener">WhatsApp: +977 9707943095</a></div><div class="activation-flow"><b>How premium activation works</b><span>1. Select a plan → 2. Pay → 3. Send payment proof + your registered email on WhatsApp → 4. Admin activates your account → 5. Your account shows ACTIVE and payment options disappear.</span></div></section>
 
-    <section id="account" class="section account-section"><div class="section-heading"><span class="eyebrow">ACCOUNT & ACCESS</span><h2>Sign in to use the tools</h2><p>Create an account and use your 1-day trial. Premium access is activated after payment confirmation.</p></div><div class="account-panel"><div class="account-info"><div class="account-avatar" id="accountAvatar">ID</div><div><h3 id="accountName">Guest User</h3><p id="accountEmail">Not signed in</p><span id="planBadge" class="plan-badge">FREE / NOT SIGNED IN</span></div></div><div class="account-actions"><button id="googleBtn" class="google-btn">G&nbsp;&nbsp; Continue with Google</button><button id="emailBtn" class="secondary">Create account / Login with Email</button><button id="premiumAccessBtn" class="primary">Get Premium Access</button><button id="logoutBtn" class="ghost" hidden>Logout</button></div><div id="trialInfo" class="trial-info">Create an account to start your 1-day trial.</div></div></section>
-
-    <section id="pricing" class="section pricing">
-      <div class="section-heading"><span class="eyebrow">PREMIUM</span><h2>Choose your plan</h2><p>Premium access is activated manually by the admin after payment confirmation.</p></div>
-      <div class="price-grid">
-        <article class="price-card"><h3>Monthly</h3><div class="price">Rs. 99 <small>/ month</small></div><p>Full website access</p><button class="secondary premiumBtn">Get Premium</button></article>
-        <article class="price-card featured"><span class="popular">BEST VALUE</span><h3>Yearly</h3><div class="price">Rs. 999 <small>/ year</small></div><p>Full website access</p><button class="primary premiumBtn">Get Premium</button></article>
-        <article class="price-card"><h3>Lifetime</h3><div class="price">Rs. 4,999</div><p>One-time access</p><button class="secondary premiumBtn">Get Premium</button></article>
-      </div>
-      <div class="payment-box"><b>Payment options</b><span>eSewa: 9707943095</span><span>Khalti / Bank: Contact admin</span><a href="https://wa.me/9779707943095" target="_blank" rel="noopener">WhatsApp: +977 9707943095</a></div>
-    </section>
-
-    <section id="contact" class="contact section">
-      <div><span class="eyebrow">CONTACT</span><h2>Need premium access?</h2><p>Send payment confirmation on WhatsApp. The admin can activate your yearly, monthly or lifetime access.</p></div>
-      <div class="contact-actions"><a class="primary" href="https://wa.me/9779707943095" target="_blank" rel="noopener">Chat on WhatsApp</a><a class="secondary" href="mailto:fastonebk@gmail.com">fastonebk@gmail.com</a><a class="secondary" href="https://www.facebook.com/profile.php?id=61593131223547" target="_blank" rel="noopener">Facebook Page</a></div>
-    </section>
-  </main>
-
-  <div id="authModal" class="modal" hidden><div class="modal-card"><button id="closeAuth" class="modal-close">×</button><span class="eyebrow">ACCOUNT</span><h2>Create your account</h2><p class="modal-note">This GitHub Pages build includes the interface. Real Google/email verification requires Firebase/Supabase in production.</p><label>Name<input id="authName" type="text" placeholder="Your name"></label><label>Email<input id="authEmail" type="email" placeholder="you@example.com"></label><label>Password<input id="authPassword" type="password" placeholder="Password"></label><button id="saveAccount" class="primary full">Create / Login</button><div class="admin-note">Premium: Monthly Rs. 99 · Yearly Rs. 999 · Lifetime Rs. 4,999</div></div></div><footer><b>ID CARD MAKER SOLUTION</b><span>© 2026 · Built for ID card professionals</span></footer>
-  <div id="toast" class="toast"></div>
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script><script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
-  <script src="script.js"></script>
-</body>
-</html>
+<section id="contact" class="contact section"><div><span class="eyebrow">CONTACT</span><h2>Need premium access?</h2><p>Send your payment confirmation and the email used for your account on WhatsApp.</p></div><div class="contact-actions"><a class="primary" href="https://wa.me/9779707943095" target="_blank" rel="noopener">Chat on WhatsApp</a><a class="secondary" href="mailto:fastonebk@gmail.com">fastonebk@gmail.com</a><a class="secondary" href="https://www.facebook.com/profile.php?id=61593131223547" target="_blank" rel="noopener">Facebook Page</a></div></section>
+</main>
+<div id="authModal" class="modal" hidden><div class="modal-card"><button id="closeAuth" class="modal-close">×</button><span class="eyebrow">ACCOUNT</span><h2>Create your account</h2><p class="modal-note">Demo account UI for GitHub Pages. Real Google/email verification and secure paid access require a backend such as Firebase/Supabase.</p><label>Name<input id="authName" type="text" placeholder="Your name"></label><label>Email<input id="authEmail" type="email" placeholder="you@example.com"></label><label>Password<input id="authPassword" type="password" placeholder="Password"></label><button id="saveAccount" class="primary full">Create / Login</button></div></div>
+<footer><b>ID CARD MAKER SOLUTION</b><span>© 2026 · Built for ID card professionals</span></footer><div id="toast" class="toast"></div>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script><script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script><script src="script.js"></script>
+</body></html>
