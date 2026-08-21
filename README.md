@@ -1,47 +1,37 @@
-# ID CARD MAKER SOLUTION — v5 GitHub-ready package
+# ID CARD MAKER SOLUTION — v4 Admin Panel
 
-## Admin Portal
-The admin portal is a separate page included in the repository:
+## What's new
+- Exact original photo filenames preserved.
+- All cropped photos download as `Cropped-Photos.zip` with one `Cropped Photos` folder.
+- AI face-focused crop using MediaPipe Face Detector, with fallback center crop.
+- Account/trial/premium UI.
+- Customer **Submit Activation Request** form.
+- New `admin.html` dashboard for reviewing requests and activating/deactivating/extending plans.
+- Plans: Monthly Rs. 99, Yearly Rs. 999, Lifetime Rs. 4,999.
 
-`https://fastonebk.github.io/ID-CARD-MAKER/admin.html`
-
-After publishing all files, open the exact URL above. The customer site also has an **Admin Portal** link in the top navigation and footer.
-
-### Demo admin login
+## Demo admin panel
+Open `admin.html`.
+Demo credentials:
 - Email: `admin@idcardmakersolution.com`
 - Password: `admin1234`
 
-## Admin features
-- Dashboard counts for customers, pending requests, active premium and expired accounts.
-- Pending request Activate / Reject buttons.
-- Quick Activate Customer: enter the customer's registered email and choose Monthly / Yearly / Lifetime.
-- Activate / Extend customer.
-- Deactivate premium.
-- Customer site hides premium payment controls while the account is active.
+The demo panel uses browser `localStorage` so it can be tested immediately. It is **NOT secure enough for a real paid service**.
 
-## Very important limitation
-This GitHub Pages package is a **demo/prototype**. `localStorage` is browser-specific. Therefore, if a customer pays from their phone and you open the Admin Portal on your computer, the browser data will NOT automatically appear on your computer.
+## Real production activation (recommended)
+For customers using different phones/computers, connect the site to a backend:
+1. Firebase Authentication (Google + Email/Password) or Supabase Auth.
+2. Firestore/Supabase database for `users`, `subscriptions`, and `paymentRequests`.
+3. Admin-only security rules.
+4. Store plan, activation date, expiry date, status, payment reference, and admin ID.
+5. Customer site reads premium status from the database; when active, hide payment UI and allow the tools.
+6. Admin activates a customer with one click.
 
-For a real paid launch, the next step is to connect Firebase Authentication + Firestore (or Supabase Auth + database). Then customer accounts, payment requests, subscription status and admin activation will be shared securely across devices.
+Do not use the demo admin password or localStorage as the production payment lock.
 
-Do not use the demo admin password for a real paid service.
+## GitHub Pages
+Upload all files to the repository root and enable GitHub Pages. `admin.html` is available at `/admin.html`.
 
-## Publish on GitHub Pages
-Upload **all files** from this folder to the repository root:
-- `index.html`
-- `admin.html`
-- `style.css`
-- `admin.css`
-- `script.js`
-- `admin.js`
-- `README.md`
-
-Then enable GitHub Pages.
-
-## Existing functionality
-- AI face-focused 1 × 1.26 inch crop at 300 DPI (300 × 378 px).
-- Exact original filenames preserved.
-- All cropped photos downloaded in one `Cropped-Photos.zip` containing a `Cropped Photos` folder.
-- Excel `.xlsx` to Common Delimited CSV.
-- Light/dark mode and English/नेपाली toggle.
-- 1-day trial UI and Monthly / Yearly / Lifetime plans.
+## External libraries
+- SheetJS XLSX via jsDelivr
+- JSZip via jsDelivr
+- MediaPipe Tasks Vision via jsDelivr + Google model hosting
