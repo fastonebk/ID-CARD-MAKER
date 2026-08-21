@@ -12,7 +12,7 @@
     <div class="brand"><span class="brand-mark">ID</span><span>ID CARD MAKER <b>SOLUTION</b></span></div>
     <nav>
       <a href="#tools">Tools</a><a href="#pricing">Pricing</a><a href="#contact">Contact</a>
-      <button id="langBtn" class="ghost">नेपाली</button>
+      <button id="langBtn" class="ghost">नेपाली</button><button id="themeBtn" class="icon-btn">☾</button><button id="authBtn" class="account-btn">Login / Create Account</button>
       <button id="themeBtn" class="icon-btn" aria-label="Toggle dark mode">☾</button>
     </nav>
   </header>
@@ -45,7 +45,7 @@
           </div>
           <button id="cropBtn" class="primary full" disabled>Crop Photos</button>
           <div id="photoStatus" class="status"></div>
-          <button id="downloadPhotos" class="secondary full" hidden>Save All Cropped Photos</button>
+          <button id="downloadPhotos" class="primary full" hidden>Download All as ZIP</button>
           <div id="photoResults" class="results"></div>
         </article>
 
@@ -67,6 +67,8 @@
       <div class="steps"><div><b>01</b><h3>Upload</h3><p>Select your photos or Excel file.</p></div><div><b>02</b><h3>Process</h3><p>Use the tool directly in your browser.</p></div><div><b>03</b><h3>Save</h3><p>Download your finished files in bulk.</p></div></div>
     </section>
 
+    <section id="account" class="section account-section"><div class="section-heading"><span class="eyebrow">ACCOUNT & ACCESS</span><h2>Sign in to use the tools</h2><p>Create an account and use your 1-day trial. Premium access is activated after payment confirmation.</p></div><div class="account-panel"><div class="account-info"><div class="account-avatar" id="accountAvatar">ID</div><div><h3 id="accountName">Guest User</h3><p id="accountEmail">Not signed in</p><span id="planBadge" class="plan-badge">FREE / NOT SIGNED IN</span></div></div><div class="account-actions"><button id="googleBtn" class="google-btn">G&nbsp;&nbsp; Continue with Google</button><button id="emailBtn" class="secondary">Create account / Login with Email</button><button id="premiumAccessBtn" class="primary">Get Premium Access</button><button id="logoutBtn" class="ghost" hidden>Logout</button></div><div id="trialInfo" class="trial-info">Create an account to start your 1-day trial.</div></div></section>
+
     <section id="pricing" class="section pricing">
       <div class="section-heading"><span class="eyebrow">PREMIUM</span><h2>Choose your plan</h2><p>Premium access is activated manually by the admin after payment confirmation.</p></div>
       <div class="price-grid">
@@ -83,9 +85,9 @@
     </section>
   </main>
 
-  <footer><b>ID CARD MAKER SOLUTION</b><span>© 2026 · Built for ID card professionals</span></footer>
+  <div id="authModal" class="modal" hidden><div class="modal-card"><button id="closeAuth" class="modal-close">×</button><span class="eyebrow">ACCOUNT</span><h2>Create your account</h2><p class="modal-note">This GitHub Pages build includes the interface. Real Google/email verification requires Firebase/Supabase in production.</p><label>Name<input id="authName" type="text" placeholder="Your name"></label><label>Email<input id="authEmail" type="email" placeholder="you@example.com"></label><label>Password<input id="authPassword" type="password" placeholder="Password"></label><button id="saveAccount" class="primary full">Create / Login</button><div class="admin-note">Premium: Monthly Rs. 99 · Yearly Rs. 999 · Lifetime Rs. 4,999</div></div></div><footer><b>ID CARD MAKER SOLUTION</b><span>© 2026 · Built for ID card professionals</span></footer>
   <div id="toast" class="toast"></div>
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script><script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
   <script src="script.js"></script>
 </body>
 </html>
