@@ -2,15 +2,99 @@ const $=s=>document.querySelector(s);const toast=m=>{const t=$("#toast");t.textC
 $("#themeBtn").onclick=()=>{document.body.classList.toggle("dark");localStorage.setItem("idcms-theme",document.body.classList.contains("dark")?"dark":"light")};if(localStorage.getItem("idcms-theme")==="dark")document.body.classList.add("dark");
 let nep=false;$("#langBtn").onclick=()=>{nep=!nep;$("#langBtn").textContent=nep?"English":"नेपाली";$("#heroText").textContent=nep?"स्कुल, स्टुडियो र ID कार्ड व्यवसायका लागि AI-assisted फोटो crop र Excel लाई Common Delimited CSV मा परिवर्तन गर्ने सजिलो टुल।":"AI-assisted face-focused photo cropping and Excel to Common Delimited CSV conversion for schools, studios and ID card professionals."};
 
+// ---------- DATABASE CONNECTION ----------
+const BACKEND_URL = "https://script.google.com/macros/s/AKfycbxkXdpOr04vtFohNZelA307Pd8CB9MBn8M8BG-FTkjtwFuY9gi11m9EplOb-f4f6Yzf/exec";
+
 // ---------- Account / trial / premium display ----------
 const KEY="idcms-account";const getAccount=()=>{try{return JSON.parse(localStorage.getItem(KEY)||"null")}catch{return null}};const setAccount=a=>localStorage.setItem(KEY,JSON.stringify(a));const daysLeft=s=>Math.ceil(Math.max(0,86400000-(Date.now()-s))/86400000);
-function updateAccount(){const a=getAccount();if(!a){$("#accountName").textContent="Guest User";$("#accountEmail").textContent="Not signed in";$("#planBadge").textContent="FREE / NOT SIGNED IN";$("#trialInfo").textContent="Create an account to start your 1-day trial.";$("#logoutBtn").hidden=true;$("#authBtn").textContent="Login / Create Account";$("#activePremiumBox").hidden=true;document.querySelectorAll(".premiumBtn,.payment-box").forEach(x=>x.hidden=false);return}$("#accountName").textContent=a.name||"User";$("#accountEmail").textContent=a.email;$("#accountAvatar").textContent=(a.name||"U").slice(0,2).toUpperCase();$("#logoutBtn").hidden=false;$("#authBtn").textContent=`Hi, ${(a.name||"User").split(" ")[0]}`;if(a.plan&&a.plan!=="trial"){$("#planBadge").textContent=`PREMIUM · ${a.plan.toUpperCase()}`;$("#trialInfo").textContent=`Premium active until ${a.expiresAt==="lifetime"?"Lifetime":new Date(a.expiresAt).toLocaleDateString()}.`;$("#activePremiumBox").hidden=false;document.querySelectorAll(".premiumBtn,.payment-box").forEach(x=>x.hidden=true)}else{const n=daysLeft(a.trialStart);$("#planBadge").textContent=n>0?"1-DAY TRIAL":"TRIAL EXPIRED";$("#trialInfo").textContent=n>0?`Trial active · approximately ${n} day remaining.`:"Your trial has ended. Choose Premium to continue.";$("#activePremiumBox").hidden=true;document.querySelectorAll(".premiumBtn,.payment-box").forEach(x=>x.hidden=false)}}updateAccount();
-$("#authBtn").onclick=()=>{if(getAccount())$("#account").scrollIntoView({behavior:"smooth"});else $("#authModal").hidden=false};$("#emailBtn").onclick=()=>$("#authModal").hidden=false;$("#closeAuth").onclick=()=>$("#authModal").hidden=true;
-$("#saveAccount").onclick=()=>{const name=$("#authName").value.trim(),email=$("#authEmail").value.trim(),pw=$("#authPassword").value;if(!name||!email||!pw){toast("Please fill name, email and password.");return}const old=getAccount();const a=old&&old.email===email?old:{name,email,trialStart:Date.now(),plan:"trial"};a.name=name;a.email=email;setAccount(a);$("#authModal").hidden=true;updateAccount();toast("Account ready. Your 1-day trial has started.")};
-$("#logoutBtn").onclick=()=>{localStorage.removeItem(KEY);updateAccount();toast("Logged out.")};$("#googleBtn").onclick=()=>toast("Google sign-in needs a real authentication backend on the production site.");$("#premiumAccessBtn").onclick=()=>$("#pricing").scrollIntoView({behavior:"smooth"});
-function allowed(){const a=getAccount();if(!a){toast("Please login or create an account first.");$("#authModal").hidden=false;return false}if(a.plan==="trial"&&daysLeft(a.trialStart)<=0){toast("Your 1-day trial has expired. Please get Premium.");$("#pricing").scrollIntoView({behavior:"smooth"});return false}return true}
+function updateAccount(){const a=getAccount();if(!a){$("#accountName").textContent="Guest User";$("#accountEmail").textContent="Not signed in";$("#planBadge").textContent="FREE / NOT SIGNED IN";$("#trialInfo").textContent="Create an account to start your 1-day trial.";$("#logoutBtn").hidden=true;$("#authBtn").textContent="Login / Create Account";$("#activePremiumBox").hidden=true;$("#adminDashboard").hidden=true;document.querySelectorAll(".premiumBtn,.payment-box").forEach(x=>x.hidden=false);return}
+$("#accountName").textContent=a.name||(a.role==="ADMIN"?"Administrator":"User");$("#accountEmail").textContent=a.email;$("#accountAvatar").textContent=(a.name||(a.role==="ADMIN"?"Admin":"User")).slice(0,2).toUpperCase();$("#logoutBtn").hidden=false;$("#authBtn").textContent=`Hi, ${(a.name||(a.role==="ADMIN"?"Admin":"User")).split(" ")[0]}`;
 
-// ---------- AI face-focused crop ----------
+if(a.role==="ADMIN") {
+    $("#planBadge").textContent=`ADMINISTRATOR`;
+    $("#trialInfo").textContent=`Full system access granted.`;
+    $("#adminDashboard").hidden=false; // Show Admin Panel
+    $("#activePremiumBox").hidden=false;
+    $("#activePremiumBox").textContent="✓ Administrator account active.";
+    document.querySelectorAll(".premiumBtn,.payment-box").forEach(x=>x.hidden=true);
+} else if(a.plan&&a.plan!=="trial"){$("#planBadge").textContent=`PREMIUM · ${a.plan.toUpperCase()}`;$("#trialInfo").textContent=`Premium active until ${a.expiresAt==="lifetime"?"Lifetime":new Date(a.expiresAt).toLocaleDateString()}.`;$("#activePremiumBox").hidden=false;document.querySelectorAll(".premiumBtn,.payment-box").forEach(x=>x.hidden=true);$("#adminDashboard").hidden=true;}else{const n=daysLeft(a.trialStart);$("#planBadge").textContent=n>0?"1-DAY TRIAL":"TRIAL EXPIRED";$("#trialInfo").textContent=n>0?`Trial active · approximately ${n} day remaining.`:"Your trial has ended. Choose Premium to continue.";$("#activePremiumBox").hidden=true;document.querySelectorAll(".premiumBtn,.payment-box").forEach(x=>x.hidden=false);$("#adminDashboard").hidden=true;}}
+updateAccount();
+
+$("#authBtn").onclick=()=>{if(getAccount())$("#account").scrollIntoView({behavior:"smooth"});else $("#authModal").hidden=false};$("#emailBtn").onclick=()=>$("#authModal").hidden=false;$("#closeAuth").onclick=()=>$("#authModal").hidden=true;
+
+$("#saveAccount").onclick=async()=>{
+    const name=$("#authName").value.trim(),email=$("#authEmail").value.trim(),pw=$("#authPassword").value;
+    if(!email||!pw){toast("Please fill email and password.");return}
+    
+    toast("Authenticating...");
+    $("#saveAccount").disabled=true;
+    $("#saveAccount").textContent="Verifying...";
+
+    try {
+        // Fallback simulation if URL is not configured yet
+        if(BACKEND_URL.includes("YOUR_GOOGLE_APPS_SCRIPT")) {
+             setTimeout(() => {
+                 let role = "USER";
+                 // Admin credentials bypass (Development only - will be replaced by Apps Script)
+                 if(email === "sk4602@idcardmakers.com" && pw === "sandEEP123@#love") {
+                     role = "ADMIN";
+                 }
+                 handleAuthResponse({
+                     success: true, 
+                     role: role,
+                     email: email,
+                     name: name || (role==="ADMIN"?"Administrator":"User"),
+                     plan: role==="ADMIN"?"lifetime":"trial",
+                     message: role==="ADMIN"?"Admin verified":"Login success"
+                 });
+             }, 800);
+             return;
+        }
+
+        // Live Production Code: Connects to your Google Apps Script Web App
+        const response = await fetch(BACKEND_URL, {
+            method: 'POST',
+            body: JSON.stringify({ action: "login", email, password: pw, name })
+        });
+        const data = await response.json();
+        handleAuthResponse(data);
+    } catch(e) {
+        toast("Connection error to database.");
+        $("#saveAccount").disabled = false;
+        $("#saveAccount").textContent="Create / Login";
+    }
+};
+
+function handleAuthResponse(data) {
+    if(data.success) {
+        const a = {
+            name: data.name,
+            email: data.email,
+            role: data.role,
+            plan: data.plan,
+            trialStart: Date.now(),
+            expiresAt: data.plan === "lifetime" ? "lifetime" : Date.now() + 86400000*30 // Mock 30 days
+        };
+        setAccount(a);
+        $("#authModal").hidden=true;
+        updateAccount();
+        if(data.role === "ADMIN") {
+            toast("Welcome, Administrator.");
+            $("#adminDashboard").scrollIntoView({behavior:"smooth"});
+        } else {
+            toast("Account ready. Trial started.");
+        }
+    } else {
+        toast("Invalid login details.");
+    }
+    $("#saveAccount").disabled=false;
+    $("#saveAccount").textContent="Create / Login";
+}
+
+$("#logoutBtn").onclick=()=>{localStorage.removeItem(KEY);updateAccount();toast("Logged out.");$("#tools").scrollIntoView({behavior:"smooth"});};$("#googleBtn").onclick=()=>toast("Google sign-in available via Google Identity Services (requires SSL).");$("#premiumAccessBtn").onclick=()=>$("#pricing").scrollIntoView({behavior:"smooth"});
+function allowed(){const a=getAccount();if(!a){toast("Please login or create an account first.");$("#authModal").hidden=false;return false}if(a.role==="ADMIN")return true;if(a.plan==="trial"&&daysLeft(a.trialStart)<=0){toast("Your 1-day trial has expired. Please get Premium.");$("#pricing").scrollIntoView({behavior:"smooth"});return false}return true}
+
+// ---------- AI face-focused crop (Retained from v3) ----------
 let photoFiles=[],croppedBlobs=[],faceDetectorPromise=null;
 $("#photoInput").onchange=()=>{photoFiles=[...$("#photoInput").files];$("#cropBtn").disabled=!photoFiles.length;$("#photoStatus").textContent=photoFiles.length?`${photoFiles.length} photo(s) selected.`:""};
 $("#photoDrop").ondragover=e=>{e.preventDefault();$("#photoDrop").style.borderColor="#0b8f65"};$("#photoDrop").ondrop=e=>{e.preventDefault();photoFiles=[...e.dataTransfer.files].filter(f=>/image\/jpe?g/i.test(f.type));$("#cropBtn").disabled=!photoFiles.length;$("#photoStatus").textContent=`${photoFiles.length} photo(s) selected.`};
@@ -23,7 +107,7 @@ function faceCrop(img,face,W,H){if(!face)return centerCrop(img,W,H);const sw=img
 $("#cropBtn").onclick=async()=>{if(!allowed())return;croppedBlobs=[];$("#photoResults").innerHTML="";const W=300,H=378;const mode=$("#cropMode").value;for(let i=0;i<photoFiles.length;i++){const f=photoFiles[i];try{$("#photoStatus").textContent=`Loading AI crop… ${i+1}/${photoFiles.length}`;const im=await loadImage(f);const face=mode==="smart"?await detectFace(im):null;const c=faceCrop(im,face,W,H);const blob=await new Promise(r=>c.toBlob(r,"image/jpeg",.94));croppedBlobs.push({blob,name:f.name});const u=URL.createObjectURL(blob),p=document.createElement("img");p.src=u;p.title=f.name;$("#photoResults").appendChild(p);$("#photoStatus").textContent=`Processed ${i+1} of ${photoFiles.length} · ${face?"AI face focused":"center fallback"}`}catch(e){console.error(e);$("#photoStatus").textContent=`Could not process ${f.name}`}}$("#downloadPhotos").hidden=!croppedBlobs.length;toast(`Finished ${croppedBlobs.length} photo(s). Original filenames preserved.`)};
 $("#downloadPhotos").onclick=async()=>{if(!allowed()||!croppedBlobs.length)return;const zip=new JSZip(),folder=zip.folder("Cropped Photos");croppedBlobs.forEach(x=>folder.file(x.name,x.blob));const blob=await zip.generateAsync({type:"blob",compression:"DEFLATE",compressionOptions:{level:6}});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="Cropped-Photos.zip";a.click();toast("ZIP created: Cropped Photos folder + original filenames.")};
 
-// ---------- Excel to CSV ----------
+// ---------- Excel to CSV (Retained from v3) ----------
 let excelFile=null;$("#excelInput").onchange=()=>{excelFile=$("#excelInput").files[0];$("#convertBtn").disabled=!excelFile;$("#excelStatus").textContent=excelFile?excelFile.name:""};$("#excelDrop").ondragover=e=>{e.preventDefault();$("#excelDrop").style.borderColor="#0b8f65"};$("#excelDrop").ondrop=e=>{e.preventDefault();const f=[...e.dataTransfer.files].find(x=>/\.xlsx?$/i.test(x.name));if(f){excelFile=f;$("#convertBtn").disabled=false;$("#excelStatus").textContent=f.name}};
 $("#convertBtn").onclick=async()=>{if(!allowed()||!excelFile)return;try{const wb=XLSX.read(await excelFile.arrayBuffer(),{type:"array"}),csv=XLSX.utils.sheet_to_csv(wb.Sheets[wb.SheetNames[0]],{FS:",",RS:"\n"}),blob=new Blob([csv],{type:"text/csv;charset=utf-8"});$("#csvDownload").href=URL.createObjectURL(blob);$("#csvDownload").download=excelFile.name.replace(/\.xlsx?$/i,"")+".csv";$("#csvDownload").hidden=false;$("#folderBtn").hidden=false;$("#folderBtn").onclick=async()=>{if(window.showSaveFilePicker){try{const h=await window.showSaveFilePicker({suggestedName:excelFile.name.replace(/\.xlsx?$/i,"")+".csv",types:[{description:"CSV",accept:{"text/csv":[".csv"]}}]}),w=await h.createWritable();await w.write(blob);await w.close();$("#excelStatus").textContent=$("#deleteExcel").checked?"CSV saved. Browser security prevents deleting the original selected file.":"CSV saved.";toast("CSV saved successfully.")}catch(e){if(e.name!=="AbortError")toast("Save cancelled or unavailable.")}}else $("#csvDownload").click()};$("#excelStatus").textContent="Conversion successful.";toast("Excel converted to CSV.")}catch(e){console.error(e);toast("Conversion failed.")}};
 
