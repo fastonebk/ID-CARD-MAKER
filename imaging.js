@@ -7,15 +7,8 @@ const DPI = 300;
 
 /* ---------- Face detection ---------- */
 
-// 320 is a good speed/accuracy balance for headshot-style photos — the
-// detector doesn't need the full 416/608 input size when the face already
-// fills a large share of the frame, and the smaller size processes faster,
-// which matters most in bulk mode.
-const DETECTOR_INPUT_SIZE = 320;
-
 let faceApiReady = false;
 let faceApiFailed = false;
-let landmarksReady = false;
 
 async function loadFaceModels() {
   const CDN_ROOTS = [
@@ -30,14 +23,6 @@ async function loadFaceModels() {
     try {
       await faceapi.nets.tinyFaceDetector.loadFromUri(root);
       faceApiReady = true;
-      try {
-        await faceapi.nets.faceLandmark68TinyNet.loadFromUri(root);
-        landmarksReady = true;
-      } catch (err) {
-        // Detector still works without landmarks — just falls back to the
-        // less precise box-only heuristic below.
-        landmarksReady = false;
-      }
       return true;
     } catch (err) {
       // try next CDN root
@@ -47,49 +32,16 @@ async function loadFaceModels() {
   return false;
 }
 
-function avgPoint(points) {
-  let x = 0, y = 0;
-  for (const p of points) { x += p.x; y += p.y; }
-  return { x: x / points.length, y: y / points.length };
-}
-
-/**
- * Returns { box, eyeMid, iod } where box is the raw detector box
- * ({x,y,w,h}), and eyeMid/iod (interocular distance) come from face
- * landmarks when available. eyeMid/iod are null if the landmark model
- * didn't load or didn't return a result — callers fall back to the box.
- */
-async function detectFace(imgEl) {
+async function detectFaceBox(imgEl) {
   if (!faceApiReady) return null;
-  const options = new faceapi.TinyFaceDetectorOptions({
-    inputSize: DETECTOR_INPUT_SIZE,
-    scoreThreshold: 0.4,
-  });
-
-  if (landmarksReady) {
-    try {
-      const result = await faceapi.detectSingleFace(imgEl, options).withFaceLandmarks(true);
-      if (result) {
-        const b = result.detection.box;
-        const leftEye = avgPoint(result.landmarks.getLeftEye());
-        const rightEye = avgPoint(result.landmarks.getRightEye());
-        return {
-          box: { x: b.x, y: b.y, w: b.width, h: b.height },
-          eyeMid: { x: (leftEye.x + rightEye.x) / 2, y: (leftEye.y + rightEye.y) / 2 },
-          iod: Math.hypot(rightEye.x - leftEye.x, rightEye.y - leftEye.y),
-        };
-      }
-      return null;
-    } catch (err) {
-      // fall through to box-only detection below
-    }
-  }
-
   try {
-    const result = await faceapi.detectSingleFace(imgEl, options);
+    const result = await faceapi.detectSingleFace(
+      imgEl,
+      new faceapi.TinyFaceDetectorOptions({ inputSize: 416, scoreThreshold: 0.4 })
+    );
     if (!result) return null;
     const b = result.box;
-    return { box: { x: b.x, y: b.y, w: b.width, h: b.height }, eyeMid: null, iod: null };
+    return { x: b.x, y: b.y, w: b.width, h: b.height };
   } catch (err) {
     return null;
   }
@@ -97,43 +49,22 @@ async function detectFace(imgEl) {
 
 /* ---------- Auto-crop heuristic (ID-photo framing) ---------- */
 
-function autoCropBox(naturalW, naturalH, face) {
+function autoCropBox(naturalW, naturalH, faceBox) {
   let box;
-  if (face && face.eyeMid && face.iod) {
-    // Eye-based alignment. Interocular distance and eye position barely
-    // move regardless of hairstyle, fringe, tikka/accessories, or exactly
-    // how tightly the detector happened to draw its box — so centering off
-    // the eyes gives far more consistent results across a whole batch than
-    // sizing off the raw detector box does.
-    const headWidthApprox = face.iod * 2.6; // rough ear-to-ear width
-    const HEAD_WIDTH_RATIO = 0.44; // head occupies ~44% of the crop's width
-    let cropW = headWidthApprox / HEAD_WIDTH_RATIO;
-    let cropH = cropW / ASPECT;
-
-    if (face.box) {
-      // Sanity check against the raw box so unusual angles still get
-      // enough vertical headroom.
-      const headHByBox = face.box.h * 1.9;
-      const cropHByBox = headHByBox / 0.62;
-      if (cropHByBox > cropH) {
-        cropH = cropHByBox;
-        cropW = cropH * ASPECT;
-      }
-    }
-
-    const EYE_LINE_RATIO = 0.42; // eyes sit ~42% down from the top of the frame
-    const cropX = face.eyeMid.x - cropW / 2;
-    const cropY = face.eyeMid.y - cropH * EYE_LINE_RATIO;
-    box = { x: cropX, y: cropY, w: cropW, h: cropH };
-  } else if (face && face.box && face.box.w > 0 && face.box.h > 0) {
-    // Landmarks weren't available for this photo — fall back to the
-    // box-only heuristic.
-    const faceBox = face.box;
+  if (faceBox && faceBox.w > 0 && faceBox.h > 0) {
+    // face-api's box roughly spans eyebrows to chin. Expand toward an
+    // approximate full head (hairline to jaw) before framing it.
     const headW = faceBox.w * 1.7;
     const headH = faceBox.h * 1.9;
     const headCenterX = faceBox.x + faceBox.w / 2;
     const headTop = faceBox.y - faceBox.h * 0.55;
 
+    // Passport/ID convention: head occupies a solid majority of the frame,
+    // with a small margin above it. Because the aspect ratio is locked,
+    // width and height can't be sized independently — so work out how big
+    // the crop needs to be to satisfy the height constraint, and separately
+    // how big it needs to be to satisfy the width constraint (so ears/hair
+    // don't get sliced off), then use whichever is larger.
     const cropHByHeight = headH / 0.62;
     const cropWByWidth = headW / 0.62;
     const cropHByWidth = cropWByWidth / ASPECT;
