@@ -59,9 +59,17 @@ function autoCropBox(naturalW, naturalH, faceBox) {
     const headCenterX = faceBox.x + faceBox.w / 2;
     const headTop = faceBox.y - faceBox.h * 0.55;
 
-    // Passport/ID convention: head occupies a solid majority of the frame
-    // height, with a small margin above it.
-    const cropH = headH / 0.62;
+    // Passport/ID convention: head occupies a solid majority of the frame,
+    // with a small margin above it. Because the aspect ratio is locked,
+    // width and height can't be sized independently — so work out how big
+    // the crop needs to be to satisfy the height constraint, and separately
+    // how big it needs to be to satisfy the width constraint (so ears/hair
+    // don't get sliced off), then use whichever is larger.
+    const cropHByHeight = headH / 0.62;
+    const cropWByWidth = headW / 0.62;
+    const cropHByWidth = cropWByWidth / ASPECT;
+
+    const cropH = Math.max(cropHByHeight, cropHByWidth);
     const cropW = cropH * ASPECT;
     const cropX = headCenterX - cropW / 2;
     const cropY = headTop - cropH * 0.1;
