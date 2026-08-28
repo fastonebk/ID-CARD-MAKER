@@ -160,8 +160,8 @@ async function openSingle(file) {
   const naturalH = img.naturalHeight;
 
   await ensureModelsSettled();
-  const faceBox = await detectFaceBox(img);
-  const box = autoCropBox(naturalW, naturalH, faceBox);
+  const face = await detectFace(img);
+  const box = autoCropBox(naturalW, naturalH, face);
 
   els.cropperContainer.innerHTML = "";
   const cropper = new Cropper(els.cropperContainer, img, naturalW, naturalH, ASPECT);
@@ -228,6 +228,7 @@ async function openBulk(files) {
   showScreen("bulk");
   await ensureModelsSettled();
 
+  const entries = [];
   for (const file of files) {
     const id = "item-" + ++bulkIdCounter;
     const tileEl = document.createElement("div");
@@ -235,7 +236,7 @@ async function openBulk(files) {
     tileEl.innerHTML = `
       <canvas width="${TARGET_W}" height="${TARGET_H}"></canvas>
       <div class="bulk-tile-name"></div>
-      <div class="bulk-tile-status">Detecting…</div>
+      <div class="bulk-tile-status">Queued…</div>
       <button type="button" class="bulk-tile-remove">Remove</button>
     `;
     els.bulkGrid.appendChild(tileEl);
@@ -243,7 +244,6 @@ async function openBulk(files) {
 
     const item = { id, file, img: null, naturalW: 0, naturalH: 0, box: null, tileEl };
     bulkItems.push(item);
-    updateBulkCount();
 
     tileEl.querySelector(".bulk-tile-remove").addEventListener("click", (e) => {
       e.stopPropagation();
@@ -251,18 +251,57 @@ async function openBulk(files) {
     });
     tileEl.addEventListener("click", () => openFineTune(id));
 
-    // Process asynchronously so the grid appears immediately.
-    loadImage(file).then(async (img) => {
+    entries.push(item);
+  }
+  updateBulkCount();
+
+  // Process concurrently (a handful at a time, not all at once) so the grid
+  // fills in fast without loading every full-resolution photo into memory
+  // simultaneously on big batches.
+  let done = 0;
+  const total = entries.length;
+  updateBulkProgress(done, total);
+
+  await asyncPool(4, entries, async (item) => {
+    item.tileEl.querySelector(".bulk-tile-status").textContent = "Detecting…";
+    try {
+      const img = await loadImage(item.file);
       item.img = img;
       item.naturalW = img.naturalWidth;
       item.naturalH = img.naturalHeight;
-      const faceBox = await detectFaceBox(img);
-      item.box = autoCropBox(item.naturalW, item.naturalH, faceBox);
+      const face = await detectFace(img);
+      item.box = autoCropBox(item.naturalW, item.naturalH, face);
       renderTile(item);
-      const statusEl = tileEl.querySelector(".bulk-tile-status");
-      statusEl.textContent = faceBox ? "Face detected" : "Manual crop";
-    });
+      const statusEl = item.tileEl.querySelector(".bulk-tile-status");
+      statusEl.textContent = face ? "Face detected" : "Manual crop";
+    } catch (err) {
+      item.tileEl.querySelector(".bulk-tile-status").textContent = "Couldn't read file";
+    } finally {
+      done++;
+      updateBulkProgress(done, total);
+    }
+  });
+
+  updateBulkCount();
+}
+
+/** Runs `worker` over `items` with at most `concurrency` in flight at once. */
+async function asyncPool(concurrency, items, worker) {
+  const executing = new Set();
+  for (const item of items) {
+    const p = Promise.resolve().then(() => worker(item));
+    executing.add(p);
+    const clear = () => executing.delete(p);
+    p.then(clear, clear);
+    if (executing.size >= concurrency) {
+      await Promise.race(executing);
+    }
   }
+  await Promise.all(executing);
+}
+
+function updateBulkProgress(done, total) {
+  els.bulkCount.textContent = `Detecting faces… ${done}/${total}`;
 }
 
 function renderTile(item) {
@@ -361,8 +400,8 @@ function renderModalPreview() {
 els.modalReset.addEventListener("click", async () => {
   if (!modalTarget) return;
   await ensureModelsSettled();
-  const faceBox = await detectFaceBox(modalTarget.img);
-  const box = autoCropBox(modalTarget.naturalW, modalTarget.naturalH, faceBox);
+  const face = await detectFace(modalTarget.img);
+  const box = autoCropBox(modalTarget.naturalW, modalTarget.naturalH, face);
   modalCropper.setBoxNatural(box);
 });
 

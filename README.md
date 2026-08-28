@@ -53,18 +53,34 @@ No build step, no `npm install` — it's static files.
 ## How the auto-crop works
 
 1. [face-api.js](https://github.com/justadudewhohacks/face-api.js) (loaded
-   from a CDN) runs its "tiny face detector" on the uploaded image, right in
-   the browser.
-2. The detected face box is expanded to approximate a full head (hairline to
-   chin) and centered in a frame with the 1 : 1.26 aspect ratio, with a small
-   margin above the head — the same convention used for passport/ID photos.
-3. You can drag the frame to move it, or drag a corner to resize it — the
+   from a CDN) runs its "tiny face detector" plus a lightweight 68-point
+   landmark model on the uploaded image, right in the browser.
+2. The frame is centered and sized off the **eyes**, not the raw detector
+   box: eye position and the distance between the eyes barely move
+   regardless of hairstyle, fringe, tikka/accessories, or head tilt, so this
+   stays far more consistent across a whole batch than sizing off the
+   detector's bounding box would. Eyes land ~42% down from the top of the
+   frame, with head width set relative to the eye spacing — the same
+   convention passport/ID photo software uses.
+3. If the landmark model doesn't load for some reason, it falls back to a
+   heuristic based on the raw detector box; if no face is found at all, it
+   falls back to a centered crop.
+4. You can drag the frame to move it, or drag a corner to resize it — the
    shape always stays locked to the correct ratio, so you can never export a
-   wrong-shaped crop by accident.
-4. If no face is found (or the face-detection CDN can't be reached — see
-   below), the frame defaults to a centered crop that you can reposition by
-   hand. The tool works fully either way; auto-detection is a head start, not
-   a requirement.
+   wrong-shaped crop by accident. The tool is fully usable by hand at every
+   fallback level; auto-detection is a head start, not a requirement.
+
+## Bulk-mode performance
+
+Photos are processed **4 at a time** (not all at once, and not strictly one
+by one) — this keeps memory use sane on large batches while still running
+close to as fast as the browser's face detector allows. A "Detecting
+faces… x/y" counter shows progress while it runs. The detector's input size
+is tuned to 320px (`DETECTOR_INPUT_SIZE` in `imaging.js`) for a good
+speed/accuracy balance on headshot-style photos — raise it if you're
+processing photos where faces are small in the frame and detection is
+missing them; lower it for more speed if faces are always large and
+centered to begin with.
 
 ## Output quality
 
